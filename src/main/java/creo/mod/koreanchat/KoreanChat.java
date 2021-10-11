@@ -1,33 +1,24 @@
 package creo.mod.koreanchat;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.client.gui.screens.InBedChatScreen;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.network.chat.FormattedText;
+import net.minecraft.client.gui.screens.inventory.SignEditScreen;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.SignBlockEntity;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.client.event.GuiOpenEvent;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.event.entity.player.PlayerWakeUpEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.InterModComms;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.minecraftforge.fml.event.lifecycle.InterModEnqueueEvent;
-import net.minecraftforge.fml.event.lifecycle.InterModProcessEvent;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.minecraftforge.fmlserverevents.FMLServerStartingEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.lang.reflect.Field;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Mod("koreanchat")
 public class KoreanChat {
@@ -37,46 +28,9 @@ public class KoreanChat {
     public static char colorChar = 888;
 
     public KoreanChat() {
-        // Register the setup method for modloading
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::setup);
-        // Register the enqueueIMC method for modloading
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::enqueueIMC);
-        // Register the processIMC method for modloading
-        FMLJavaModLoadingContext.get().getModEventBus().addListener(this::processIMC);
-
-        // Register ourselves for server and other game events we are interested in
         MinecraftForge.EVENT_BUS.register(this);
     }
 
-    private void setup(final FMLCommonSetupEvent event) {
-        // some preinit code
-        //LOGGER.info("HELLO FROM PREINIT");
-        //LOGGER.info("DIRT BLOCK >> {}", Blocks.DIRT.getRegistryName());
-    }
-
-    private void enqueueIMC(final InterModEnqueueEvent event) {
-        // some example code to dispatch IMC to another mod
-        //InterModComms.sendTo("examplemod", "helloworld", () -> { LOGGER.info("Hello world from the MDK"); return "Hello world";});
-    }
-
-    private void processIMC(final InterModProcessEvent event) {
-        // some example code to receive and process InterModComms from other mods
-        /*LOGGER.info("Got IMC {}", event.getIMCStream().
-                map(m->m.messageSupplier().get()).
-                collect(Collectors.toList()));
-
-         */
-    }
-
-    // You can use SubscribeEvent and let the Event Bus discover methods to call
-    @SubscribeEvent
-    public void onServerStarting(FMLServerStartingEvent event) {
-        // do something when the server starts
-        // LOGGER.info("HELLO from server starting");
-    }
-
-    // You can use EventBusSubscriber to automatically subscribe events on the contained class (this is subscribing to the MOD
-    // Event bus for receiving Registry Events)
     @Mod.EventBusSubscriber(bus = Mod.EventBusSubscriber.Bus.FORGE)
     public static class RegistryEvents {
         @SubscribeEvent
@@ -96,7 +50,15 @@ public class KoreanChat {
                     Field[] fields = objClass.getDeclaredFields();
                     for (Field field : fields) {
                         field.setAccessible(true);
-                        if (field.getName().equals("field_146409_v") || field.getName().equals("initial")) {
+                        /**
+                         * find various
+                         try {
+                         LOGGER.info(field.getName() + " : " + (String) field.get(guiChat));
+                         }catch(Exception e) {
+
+                         }
+                         */
+                        if (field.getName().equals("f_95576_") || field.getName().equals("initial")) {
                             defaultString = (String) field.get(guiChat);
                             break;
                         }
@@ -106,6 +68,35 @@ public class KoreanChat {
                 }
 
                 event.setGui(new KoreanChatScreen(defaultString, isSleep));
+            } else if (gui instanceof SignEditScreen) {
+                SignEditScreen guiEditSign = (SignEditScreen) gui;
+                SignBlockEntity tileSign = null;
+
+                try {
+                    Class<?> objClass = guiEditSign.getClass();
+                    Field[] fields = objClass.getDeclaredFields();
+                    for (Field field : fields) {
+                        field.setAccessible(true);
+                        /**
+                         * find various
+                         try {
+                         LOGGER.info(field.getName() + " : " + (SignBlockEntity) field.get(guiEditSign));
+                         }catch(Exception e) {
+
+                         }
+                         */
+
+                        if (field.getName().equals("f_99254_") || field.getName().equals("sign")) {
+                            tileSign = (SignBlockEntity) field.get(guiEditSign);
+                            break;
+                        }
+                    }
+                } catch (Exception e) {
+
+                }
+
+                if (tileSign != null)
+                    event.setGui(new KoreanSignEditScreen(tileSign, Minecraft.getInstance().isTextFilteringEnabled()));
             }
         }
 
@@ -116,8 +107,6 @@ public class KoreanChat {
 
         @SubscribeEvent
         public static void onClientChatReceived(final ClientChatReceivedEvent event) {
-            LOGGER.info("onClientChatReceived");
-
             if (event.getMessage() instanceof TranslatableComponent) {
                 TranslatableComponent message = (TranslatableComponent) event.getMessage();
                 if (message.getString().contains(colorChar + "")) {
@@ -139,17 +128,6 @@ public class KoreanChat {
                     newMessage.setStyle(message.getStyle());
                     event.setMessage(newMessage);
                 }
-            } else if (event.getMessage() instanceof TranslatableComponent) {
-                /*StringTextComponent message = (StringTextComponent) event.getMessage();
-                if (message.getFormattedText().contains(colorChar + "")) {
-                    List<ITextComponent> args = message.getSiblings();
-                    StringTextComponent chat = (StringTextComponent) args.get(1);
-                    Style style = chat.getStyle();
-                    chat = new StringTextComponent(chat.getText().replace(colorChar, '§'));
-                    chat.setStyle(style);
-                    args.set(1, chat);
-                    event.setMessage(message);
-                }*/
             }
         }
     }
