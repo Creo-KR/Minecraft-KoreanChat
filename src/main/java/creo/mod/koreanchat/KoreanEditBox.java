@@ -404,7 +404,6 @@ public class KoreanEditBox extends EditBox {
     }
 
 
-
     ///////////////////////////////////
 
 
