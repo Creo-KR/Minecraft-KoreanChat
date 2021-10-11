@@ -3,8 +3,13 @@ package creo.mod.koreanchat;
 import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.client.gui.screens.InBedChatScreen;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.FormattedText;
+import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.client.event.GuiOpenEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.RegistryEvent;
@@ -21,11 +26,15 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.lang.reflect.Field;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Mod("koreanchat")
 public class KoreanChat {
     private static final Logger LOGGER = LogManager.getLogger();
+
+    public static boolean korean = false;
+    public static char colorChar = 888;
 
     public KoreanChat() {
         // Register the setup method for modloading
@@ -74,7 +83,7 @@ public class KoreanChat {
         public static void onGuiOpen(final GuiOpenEvent event) {
             // register a new block here
             Screen gui = event.getGui();
-            if(gui instanceof ChatScreen) {
+            if (gui instanceof ChatScreen) {
                 ChatScreen guiChat = (ChatScreen) gui;
                 boolean isSleep = false;
                 if (gui instanceof InBedChatScreen)
@@ -102,8 +111,46 @@ public class KoreanChat {
 
         @SubscribeEvent
         public static void onPlayerWakeUpEvent(final PlayerWakeUpEvent event) {
-            LOGGER.info("WAKE UP");
             event.getPlayer().closeContainer();
+        }
+
+        @SubscribeEvent
+        public static void onClientChatReceived(final ClientChatReceivedEvent event) {
+            LOGGER.info("onClientChatReceived");
+
+            if (event.getMessage() instanceof TranslatableComponent) {
+                TranslatableComponent message = (TranslatableComponent) event.getMessage();
+                if (message.getString().contains(colorChar + "")) {
+                    Object[] args = message.getArgs();
+
+                    TextComponent chat;
+                    if (args[1] instanceof String) {
+                        chat = new TextComponent((String) args[1]);
+                    } else if (args[1] instanceof TextComponent) {
+                        chat = (TextComponent) args[1];
+                    } else
+                        return;
+
+                    Style style = chat.getStyle();
+                    chat = new TextComponent(chat.getText().replace(colorChar, '§'));
+                    chat.setStyle(style);
+                    args[1] = chat;
+                    TranslatableComponent newMessage = new TranslatableComponent(message.getKey(), args);
+                    newMessage.setStyle(message.getStyle());
+                    event.setMessage(newMessage);
+                }
+            } else if (event.getMessage() instanceof TranslatableComponent) {
+                /*StringTextComponent message = (StringTextComponent) event.getMessage();
+                if (message.getFormattedText().contains(colorChar + "")) {
+                    List<ITextComponent> args = message.getSiblings();
+                    StringTextComponent chat = (StringTextComponent) args.get(1);
+                    Style style = chat.getStyle();
+                    chat = new StringTextComponent(chat.getText().replace(colorChar, '§'));
+                    chat.setStyle(style);
+                    args.set(1, chat);
+                    event.setMessage(message);
+                }*/
+            }
         }
     }
 }
