@@ -34,5 +34,5 @@ displayURL="http://creos.tistory.com/entry/koreanchat" #optional
 authors="Creo" #optional
 # The description text for the mod (multi line!) (#mandatory)
 description='''
-Minecraft 1.15 Korean Chat Mod
+Minecraft 1.17.1 Korean Chat Mod
 '''

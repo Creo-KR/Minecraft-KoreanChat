@@ -17,7 +17,7 @@ apply plugin: 'maven-publish'
 [compileJava, compileTestJava]*.options*.compilerArgs = ['-Xlint:-options']
 
 def modversion = "2.0"
-version = "1.17-" + modversion
+version = "1.17.1-" + modversion
 group = '' // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = 'koreanchat-creo'
 
