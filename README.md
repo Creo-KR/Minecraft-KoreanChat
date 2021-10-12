@@ -7,3 +7,7 @@
 Installation
 
 `%appdata%/.minecraft/mods`
+
+Release
+
+https://creos.tistory.com/entry/koreanchat
