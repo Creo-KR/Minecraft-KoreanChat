@@ -33,7 +33,6 @@ public class KoreanChatScreen extends ChatScreen {
         super(initial);
         this.initial = initial;
         this.isSleep = isSleep;
-        LOGGER.info("KOREAN CHAT defaultText:" + initial + ", isSleep: " + isSleep);
     }
 
     @Override

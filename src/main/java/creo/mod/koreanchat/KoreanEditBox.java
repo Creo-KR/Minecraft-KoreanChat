@@ -49,11 +49,6 @@ public class KoreanEditBox extends EditBox {
         return FormattedCharSequence.forward(p_94147_, Style.EMPTY);
     };
 
-    /**
-     * KoreanChat
-     */
-    private boolean isEffect = false;
-
     public KoreanEditBox(Font p1, int p2, int p3, int p4, int p5, Component p6) {
         this(p1, p2, p3, p4, p5, null, p6);
     }
@@ -72,17 +67,16 @@ public class KoreanEditBox extends EditBox {
                 this.insertText("");
             } else {
                 int i = this.getCursorPos(p_94181_);
-                String s = this.value.substring(0, i);
-                if (s.length() > 0) {
-                    char last = s.charAt(s.length() - 1);
-                    if (last == KoreanChat.colorChar)
-                        s = this.value.substring(0, --i);
-                }
-
                 int j = Math.min(i, this.cursorPos);
                 int k = Math.max(i, this.cursorPos);
+                if (j > 0 && this.value.charAt(j - 1) == KoreanChat.colorChar) {
+                    j--;
+                }
+                if (k > 0 && this.value.charAt(k - 1) == KoreanChat.colorChar) {
+                    k++;
+                }
                 if (j != k) {
-                    s = (new StringBuilder(s)).delete(j, k).toString();
+                    String s = (new StringBuilder(this.value)).delete(j, k).toString();
                     if (this.filter.test(s)) {
                         this.value = s;
                         this.moveCursorTo(j);
@@ -128,7 +122,7 @@ public class KoreanEditBox extends EditBox {
                     // A~Z
                 } else if (p1 != 259 && p1 != 340 && p1 != 344) {
                     // backspace Lshift Rshift
-                    resetStatus();
+                    Converter.resetStatus();
                 }
 
                 switch (p1) {
@@ -144,7 +138,7 @@ public class KoreanEditBox extends EditBox {
                         }
                         return true;
                     case 260: // insert
-                        isEffect = !isEffect;
+                        KoreanChat.isEffect = !KoreanChat.isEffect;
                         return true;
                     case 264:
                     case 265:
@@ -190,18 +184,10 @@ public class KoreanEditBox extends EditBox {
         }
     }
 
-    /**
-     * Korean Chat
-     */
-    public void resetStatus() {
-        Converter.typed = 0;
-        Converter.lastTyped = "";
-    }
-
     public boolean charTyped(char p1, int p2) {
         if (this.canConsumeInput()) {
-            if (isEffect) {
-                isEffect = false;
+            if (KoreanChat.isEffect) {
+                KoreanChat.isEffect = false;
                 String color = "1234567890abcdefklmnor";
                 if (color.indexOf(p1) != -1)
                     this.insertText("" + KoreanChat.colorChar + p1);
@@ -299,6 +285,32 @@ public class KoreanEditBox extends EditBox {
         return false;
     }
 
+    public boolean mouseClicked(double p_94125_, double p_94126_, int p_94127_) {
+        if (!this.isVisible()) {
+            return false;
+        } else {
+            boolean flag = p_94125_ >= (double) this.x && p_94125_ < (double) (this.x + this.width) && p_94126_ >= (double) this.y && p_94126_ < (double) (this.y + this.height);
+            if (this.canLoseFocus) {
+                this.setFocus(flag);
+            }
+
+            if (this.isFocused() && flag && p_94127_ == 0) {
+                int i = Mth.floor(p_94125_) - this.x;
+                if (this.bordered) {
+                    i -= 4;
+                }
+
+                String s = this.font.plainSubstrByWidth(this.value.substring(this.displayPos), this.getInnerWidth());
+                String[] t1 = this.font.plainSubstrByWidth(s, i).split(KoreanChat.colorChar+"");
+                int t2 = (t1.length - 1) * 2;
+                this.moveCursorTo(this.font.plainSubstrByWidth(s, i).length() + t2 + this.displayPos);
+                return true;
+            } else {
+                return false;
+            }
+        }
+    }
+
     public void renderButton(PoseStack p_94160_, int p_94161_, int p_94162_, float p_94163_) {
         if (this.isVisible()) {
             if (this.isBordered()) {
@@ -345,7 +357,20 @@ public class KoreanEditBox extends EditBox {
             }
 
             if (!s.isEmpty() && flag && j < s.length()) {
-                this.font.drawShadow(p_94160_, this.formatter.apply(s.substring(j), this.cursorPos), (float) j1, (float) i1, i2);
+                FormattedCharSequence formattedCharSequence = this.formatter.apply(s.substring(j), this.cursorPos);
+                String[] t1 = s.substring(0, j).split("§");
+                String prevStyle = "";
+
+                for (int i = 1; i < t1.length; i++) {
+                    prevStyle += "§";
+                    prevStyle += t1[i].charAt(0);
+                }
+
+                if (j > 0 && s.charAt(j - 1) == '§') {
+                    prevStyle += "§";
+                }
+
+                this.font.drawShadow(p_94160_, prevStyle + s.substring(j), (float) j1, (float) i1, i2);
             }
 
             if (!flag2 && this.suggestion != null) {
@@ -390,7 +415,7 @@ public class KoreanEditBox extends EditBox {
     }
 
     private void drawStringEffect(PoseStack p1) {
-        if (!isEffect)
+        if (!KoreanChat.isEffect)
             return;
 
         fill(p1, this.x - 3 + 14, this.y - 2 - height, this.x + 10 + 158, this.y - 2, 0xAA44FFFF);
@@ -565,30 +590,6 @@ public class KoreanEditBox extends EditBox {
 
     public boolean canConsumeInput() {
         return this.isVisible() && this.isFocused() && this.isEditable();
-    }
-
-    public boolean mouseClicked(double p_94125_, double p_94126_, int p_94127_) {
-        if (!this.isVisible()) {
-            return false;
-        } else {
-            boolean flag = p_94125_ >= (double) this.x && p_94125_ < (double) (this.x + this.width) && p_94126_ >= (double) this.y && p_94126_ < (double) (this.y + this.height);
-            if (this.canLoseFocus) {
-                this.setFocus(flag);
-            }
-
-            if (this.isFocused() && flag && p_94127_ == 0) {
-                int i = Mth.floor(p_94125_) - this.x;
-                if (this.bordered) {
-                    i -= 4;
-                }
-
-                String s = this.font.plainSubstrByWidth(this.value.substring(this.displayPos), this.getInnerWidth());
-                this.moveCursorTo(this.font.plainSubstrByWidth(s, i).length() + this.displayPos);
-                return true;
-            } else {
-                return false;
-            }
-        }
     }
 
     public void setFocus(boolean p_94179_) {

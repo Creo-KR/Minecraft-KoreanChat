@@ -13,7 +13,7 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
-public class KoreanTextFieldHelper extends TextFieldHelper {
+public class KoreanTextFieldHelper {
     private final Supplier<String> getMessageFn;
     private final Consumer<String> setMessageFn;
     private final Supplier<String> getClipboardFn;
@@ -23,7 +23,6 @@ public class KoreanTextFieldHelper extends TextFieldHelper {
     private int selectionPos;
 
     public KoreanTextFieldHelper(Supplier<String> p_95137_, Consumer<String> p_95138_, Supplier<String> p_95139_, Consumer<String> p_95140_, Predicate<String> p_95141_) {
-        super(p_95137_, p_95138_, p_95139_, p_95140_, p_95141_);
         this.getMessageFn = p_95137_;
         this.setMessageFn = p_95138_;
         this.getClipboardFn = p_95139_;
@@ -31,12 +30,7 @@ public class KoreanTextFieldHelper extends TextFieldHelper {
         this.stringValidator = p_95141_;
         this.setCursorToEnd();
 
-        resetStatus();
-    }
-
-    public void resetStatus() {
-        Converter.typed = 0;
-        Converter.lastTyped = "";
+        Converter.resetStatus();
     }
 
     public boolean keyPressed(int p1) {
@@ -44,7 +38,7 @@ public class KoreanTextFieldHelper extends TextFieldHelper {
             // A~Z
         } else if (p1 != 259 && p1 != 340 && p1 != 344) {
             // backspace Lshift Rshift
-            resetStatus();
+            Converter.resetStatus();
         }
 
         switch (p1) {
@@ -56,7 +50,7 @@ public class KoreanTextFieldHelper extends TextFieldHelper {
                     this.removeCharsFromCursor(-1);
                 return true;
             case 260: // insert
-                KoreanSignEditScreen.isEffect = !KoreanSignEditScreen.isEffect;
+                KoreanChat.isEffect = !KoreanChat.isEffect;
                 return true;
             case 341:
                 KoreanChat.korean = !KoreanChat.korean;
@@ -118,8 +112,8 @@ public class KoreanTextFieldHelper extends TextFieldHelper {
     }
 
     public boolean charTyped(char p1) {
-        if (KoreanSignEditScreen.isEffect) {
-            KoreanSignEditScreen.isEffect = false;
+        if (KoreanChat.isEffect) {
+            KoreanChat.isEffect = false;
             String color = "1234567890abcdefklmnor";
             char code = 167;
             if (color.indexOf(p1) != -1)
@@ -294,6 +288,13 @@ public class KoreanTextFieldHelper extends TextFieldHelper {
                 int i = Util.offsetByCodepoints(s, this.cursorPos, p_95190_);
                 int j = Math.min(i, this.cursorPos);
                 int k = Math.max(i, this.cursorPos);
+                if (j > 0 && s.charAt(j - 1) == 167) {
+                    j--;
+                }
+                if (k > 0 && s.charAt(k - 1) == 167) {
+                    k++;
+                }
+
                 s1 = (new StringBuilder(s)).delete(j, k).toString();
                 if (p_95190_ < 0) {
                     this.selectionPos = this.cursorPos = j;

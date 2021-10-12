@@ -4,10 +4,14 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.client.gui.screens.InBedChatScreen;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.inventory.BookEditScreen;
 import net.minecraft.client.gui.screens.inventory.SignEditScreen;
 import net.minecraft.network.chat.Style;
 import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.SignBlockEntity;
 import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.client.event.GuiOpenEvent;
@@ -25,6 +29,7 @@ public class KoreanChat {
     private static final Logger LOGGER = LogManager.getLogger();
 
     public static boolean korean = false;
+    public static boolean isEffect = false;
     public static char colorChar = 888;
 
     public KoreanChat() {
@@ -97,6 +102,40 @@ public class KoreanChat {
 
                 if (tileSign != null)
                     event.setGui(new KoreanSignEditScreen(tileSign, Minecraft.getInstance().isTextFilteringEnabled()));
+            } else if (gui instanceof BookEditScreen) {
+                BookEditScreen guiEditBook = (BookEditScreen) gui;
+                Player player = Minecraft.getInstance().player;
+                ItemStack book = null;
+                InteractionHand hand = null;
+
+                try {
+                    Class<?> objClass = guiEditBook.getClass();
+                    Field[] fields = objClass.getDeclaredFields();
+                    for (Field field : fields) {
+                        field.setAccessible(true);
+                        /**
+                         * find various
+                         try{
+                         LOGGER.info(field.getName() + " : " + (ItemStack) field.get(guiEditBook));
+                         }catch(Exception e){}
+
+                         try{
+                         LOGGER.info(field.getName() + " : " + (InteractionHand) field.get(guiEditBook));
+                         }catch(Exception e){}
+                         */
+
+                        if (field.getName().equals("f_98065_") || field.getName().equals("book")) {
+                            book = (ItemStack) field.get(guiEditBook);
+                        } else if (field.getName().equals("f_98056_") || field.getName().equals("hand")) {
+                            hand = (InteractionHand) field.get(guiEditBook);
+                        }
+                    }
+                } catch (Exception e) {
+
+                }
+
+                if (book != null && hand != null)
+                    event.setGui(new KoreanBookEditScreen(player, book, hand));
             }
         }
 

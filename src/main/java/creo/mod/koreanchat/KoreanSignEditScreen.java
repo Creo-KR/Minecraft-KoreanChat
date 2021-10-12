@@ -31,12 +31,10 @@ public class KoreanSignEditScreen extends Screen {
     private final SignBlockEntity sign;
     private int frame;
     private int line;
-    private TextFieldHelper signField;
+    private KoreanTextFieldHelper signField;
     private WoodType woodType;
     private SignRenderer.SignModel signModel;
     private final String[] messages;
-
-    public static boolean isEffect = false;
 
     public KoreanSignEditScreen(SignBlockEntity p_169811_, boolean p_169812_) {
         super(new TranslatableComponent("sign.edit"));
@@ -59,7 +57,7 @@ public class KoreanSignEditScreen extends Screen {
         }, (p_169824_) -> {
             this.messages[this.line] = p_169824_;
             this.sign.setMessage(this.line, new TextComponent(p_169824_));
-        }, TextFieldHelper.createClipboardGetter(this.minecraft), TextFieldHelper.createClipboardSetter(this.minecraft), (p_169822_) -> {
+        }, KoreanTextFieldHelper.createClipboardGetter(this.minecraft), KoreanTextFieldHelper.createClipboardSetter(this.minecraft), (p_169822_) -> {
             return this.minecraft.font.width(p_169822_) <= 90;
         });
         BlockState blockstate = this.sign.getBlockState();
@@ -174,7 +172,7 @@ public class KoreanSignEditScreen extends Screen {
     }
 
     private void drawStringEffect(PoseStack p1) {
-        if (!isEffect)
+        if (!KoreanChat.isEffect)
             return;
 
         fill(p1, this.width / 2 - 78, 54, this.width / 2 + 78, 66, 0xAA44FFFF);

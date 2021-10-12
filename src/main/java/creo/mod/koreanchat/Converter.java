@@ -5,6 +5,11 @@ public class Converter {
     public static String lastTyped = "";
     public static String init;
 
+    public static void resetStatus() {
+        Converter.typed = 0;
+        Converter.lastTyped = "";
+    }
+
     public static String getInital(String input) {
         String en = "QWERTOP";
         String kr = "ㅃㅉㄸㄲㅆㅒㅖ";
